@@ -7,9 +7,7 @@
 
 #define ARCADE_MODE 						SPLIT_JOYSTICK_L
 #define DEADBAND 5
-
 //#define REVERSE_DRIVE_BUTTON		Btn5U
-#define SLOW_TURN_BUTTON 		Btn7R
 
 /****************************************************************/
 
@@ -24,13 +22,8 @@ typedef enum ARCADE_MODES
 byte joystickX = 0;
 byte joystickY = 0;
 
-float nNewTurnRatio = 0.5;
-
 bool bStateRDrive = false;
 bool bStateRDriveButton = false;
-
-bool bStateSTurn = false;
-bool bStateSTurnButton = false;
 
 /****************************************************************/
 
@@ -43,11 +36,6 @@ bool isReversingDrive();
 int setReverseDrive(bool bValue);
 bool isRDriveButtonPressed();
 int setRDriveButtonPressed(bool bValue);
-
-bool isSlowTurning();
-int setSlowTurning(bool bValue);
-bool isSlowTurnButtonPressed();
-int setSlowTurnButtonPressed(bool bValue);
 
 /****************************************************************/
 
@@ -66,16 +54,6 @@ task driveSystem()
 				setRDriveButtonPressed(false);
 			}
 #endif
-
-			if (vexRT[SLOW_TURN_BUTTON] && !isSlowTurnButtonPressed())
-			{
-				setSlowTurning(!isSlowTurning());
-				setSlowTurnButtonPressed(true);
-			}
-			else if (!vexRT[SLOW_TURN_BUTTON])
-			{
-				setSlowTurnButtonPressed(false);
-			}
 
 		runDriveSystem(ARCADE_MODE);
 	}
@@ -120,13 +98,13 @@ int runDriveSystem(ARCADE_MODES nJoystick)
 
 	if (abs(joystickX) > DEADBAND || abs(joystickY) > DEADBAND)
 	{
-		if (!isSlowTurning()) // isReversingDrive();
+		if (!isReversingDrive())
 		{
 			setDriveSpeed(
-				joystickY + joystickX,
-				joystickY - joystickX,
-				joystickY + joystickX,
-				joystickY - joystickX
+				roundToLimit(joystickY + joystickX, -127, 127),
+				roundToLimit(joystickY - joystickX, -127, 127),
+				roundToLimit(joystickY + joystickX, -127, 127),
+				roundToLimit(joystickY - joystickX, -127, 127)
 			);
 			//setDriveSpeed(
 			//	(joystickY + joystickX),
@@ -138,17 +116,11 @@ int runDriveSystem(ARCADE_MODES nJoystick)
 		else
 		{
 			setDriveSpeed(
-				joystickY + (nNewTurnRatio * joystickX),
-				joystickY - (nNewTurnRatio * joystickX),
-				joystickY + (nNewTurnRatio * joystickX),
-				joystickY - (nNewTurnRatio * joystickX)
+				-(joystickY - joystickX),
+				-(joystickY + joystickX),
+				-(joystickY - joystickX),
+				-(joystickY + joystickX)
 			);
-			//setDriveSpeed(
-			//	-(joystickY - joystickX),
-			//	-(joystickY + joystickX),
-			//	-(joystickY - joystickX),
-			//	-(joystickY + joystickX)
-			//);
 		}
 	}
 	else
@@ -201,31 +173,6 @@ bool isRDriveButtonPressed()
 int setRDriveButtonPressed(bool bValue)
 {
 	bStateRDriveButton = bValue;
-
-	return 1;
-}
-
-
-bool isSlowTurning()
-{
-	return bStateSTurn;
-}
-
-int setSlowTurning(bool bValue)
-{
-	bStateSTurn = bValue;
-
-	return 1;
-}
-
-bool isSlowTurnButtonPressed()
-{
-	return bStateSTurnButton;
-}
-
-int setSlowTurnButtonPressed(bool bValue)
-{
-	bStateSTurnButton = bValue;
 
 	return 1;
 }

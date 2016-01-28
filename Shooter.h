@@ -8,22 +8,21 @@
 #define SHOOTER_BUTTON_MID_SPEED			Btn8R
 #define SHOOTER_BUTTON_MAX_SPEED			Btn8U
 #define SHOOTER_REVERSE_BUTTON				Btn7D
-//#define SHOOTER_BUTTON_INCREASE 			Btn5U
-//#define SHOOTER_BUTTON_DECREASE 			Btn5D
+#define SHOOTER_BUTTON_INCREASE 			Btn5U
+#define SHOOTER_BUTTON_DECREASE 			Btn5D
 
 #define SHOOTER_INC_RATE 25
 #define SHOOTER_DEC_RATE 25
 
-#define SHOOTER_DT										125 //ms
-#define SHOOTER_EPSILON								0.3	//30
-#define SHOOTER_PROPORTION_CONST			0.1	//0.01
-#define SHOOTER_INTEGRAL_CONST				0		//0.0
-#define SHOOTER_DERIVATIVE_CONST			0		//0.027
+#define SHOOTER_EPSILON								30
+#define SHOOTER_PROPORTION_CONST			0.01
+#define SHOOTER_INTEGRAL_CONST				0.0
+#define SHOOTER_DERIVATIVE_CONST			0.027
 
-#define SHOOTER_LOW_SPEED 						8.0		//1000
-#define SHOOTER_MID_SPEED 						20.0 	//2500
-#define SHOOTER_MAX_SPEED 						21.6 	//2700
-#define SHOOTER_REVERSE_SPEED					-4.8	//-600
+#define SHOOTER_LOW_SPEED 						900 //CHECK // 2000
+#define SHOOTER_MID_SPEED 						1100 //CHECK // 2300
+#define SHOOTER_MAX_SPEED 						1400 //CHECK // 2600
+#define SHOOTER_REVERSE_SPEED					-600
 
 
 /****************************************************************/
@@ -32,13 +31,12 @@ bool bShooterActive = false;
 bool bShooterIncreaseState = false;
 bool bShooterDecreaseState = false;
 
-float nRequestedSpeed	= 0;
-float nCurrentSpeed		= 0;
+int nRequestedSpeed	= 0;
+int nCurrentSpeed		= 0;
 byte nMotorPower = 0;
 
 int newRate = 0;
 int	integral = 0;
-int derivative = 0;
 int preError = 0;
 
 /****************************************************************/
@@ -48,10 +46,10 @@ task 	constantRamp();
 int		incShooterSpeed();
 
 int		getShooterRequestedSpeed();
-int		setShooterRequestedSpeed(float nSpeed);
+int		setShooterRequestedSpeed(int nSpeed);
 
 int		getShooterSpeed();
-int		setShooterSpeed(float nSpeed);
+int		setShooterSpeed(int nSpeed);
 
 byte 	getShooterMotorPower();
 int 	setShooterMotorPower(short nPower);
@@ -103,7 +101,6 @@ task shooter()
 			setShooterActive(false);
 		}
 
-#ifdef SHOOTER_BUTTON_INCREASE
 		if (vexRT[SHOOTER_BUTTON_INCREASE] && !isShooterIncreaseActive())
 		{
 			setShooterRequestedSpeed(getShooterRequestedSpeed() + SHOOTER_INC_RATE);
@@ -113,9 +110,7 @@ task shooter()
 		{
 			setShooterIncrease(false);
 		}
-#endif
 
-#ifdef SHOOTER_BUTTON_DECREASE
 		if (vexRT[SHOOTER_BUTTON_DECREASE] && !isShooterDecreaseActive())
 		{
 			setShooterRequestedSpeed(getShooterRequestedSpeed() - SHOOTER_DEC_RATE);
@@ -125,7 +120,7 @@ task shooter()
 		{
 			setShooterDecrease(false);
 		}
-#endif
+
 		//setShooterRequestedSpeed(SHOOTER_LOW_SPEED);
 	}
 }
@@ -136,8 +131,8 @@ task constantRamp()
 	{
 		setShooterEncoderValue(0);
 		incShooterSpeed();
-		wait1Msec(SHOOTER_DT);
-		setShooterSpeed(getShooterEncoderValue() / SHOOTER_DT); // ticks/ms
+		wait1Msec(125);
+		setShooterSpeed(getShooterEncoderValue());
 	}
 }
 
@@ -157,14 +152,12 @@ int incShooterSpeed()
 
 		if (abs(nError) > SHOOTER_EPSILON)
 		{
-			integral += (nError * SHOOTER_DT);
+			integral += nError;
 		}
-
-		derivative = ((nError - preError)/SHOOTER_DT);
 
 		int nProportion = SHOOTER_PROPORTION_CONST * nError;
 		int nIntegral = SHOOTER_INTEGRAL_CONST * integral;
-		int nDerivative = SHOOTER_DERIVATIVE_CONST * derivative;
+		int nDerivative = SHOOTER_DERIVATIVE_CONST * (nError - preError);
 
 		newRate = nProportion + nIntegral + nDerivative;
 
@@ -183,7 +176,7 @@ int getShooterRequestedSpeed()
 	return nRequestedSpeed;
 }
 
-int	setShooterRequestedSpeed(float nSpeed)
+int	setShooterRequestedSpeed(int nSpeed)
 {
 	nRequestedSpeed = nSpeed;
 
@@ -196,7 +189,7 @@ int getShooterSpeed()
 	return nCurrentSpeed;
 }
 
-int setShooterSpeed(float nSpeed)
+int setShooterSpeed(int nSpeed)
 {
 	nCurrentSpeed = nSpeed;
 
