@@ -3,8 +3,11 @@
 
 /****************************************************************/
 
-#define DS_JOYSTICK_MODE		SPLIT_JOYSTICK_L
-#define DS_DEADBAND 			5
+#define DS_JOYSTICK_MODE				SPLIT_JOYSTICK_L
+#define DS_DEADBAND 						5
+
+#define DS_SLOW_TURN_BUTTON 		Btn7R
+#define DS_SLOW_TURN_RATIO			0.5
 
 /****************************************************************/
 
@@ -18,12 +21,21 @@ typedef enum DS_JOYSTICK_MODES
 
 byte ds_aJoystick[] = {0, 0};
 
+// Index 0: Turn state.
+// Index 1: Turn button state.
+bool ds_aTurnStates[] = {false, false};
+
 /****************************************************************/
 
-int runDriveSystem(DS_JOYSTICK_MODES nJoystick);
+int runDriveSystem();
 
 int setDriveSpeed(short nPower);
 int setDriveSpeed(short nPowerLF, short nPowerRF, short nPowerLB, short nPowerRB);
+
+bool isSlowTurning();
+void setSlowTurning(bool bValue);
+bool isSlowTurnButtonPressed();
+void setSlowTurnButtonPressed(bool bValue);
 
 /****************************************************************/
 
@@ -31,6 +43,16 @@ task driveSystem()
 {
 	while (true)
 	{
+		if (vexRT[DS_SLOW_TURN_BUTTON] && !isSlowTurnButtonPressed())
+		{
+			setSlowTurning(!isSlowTurning());
+			setSlowTurnButtonPressed(true);
+		}
+		else if (!vexRT[DS_SLOW_TURN_BUTTON])
+		{
+			setSlowTurnButtonPressed(false);
+		}
+
 		runDriveSystem();
 	}
 }
@@ -42,33 +64,38 @@ task driveSystem()
 
 	@nJoystick: Tells which joystick to use. Refer to enum above.
 */
-int runDriveSystem(DS_JOYSTICK_MODES nJoystick)
+int runDriveSystem()
 {
 	switch (DS_JOYSTICK_MODE)
 	{
 		case LEFT_JOYSTICK:
-			ds_aJoystick = {vexRT[Ch4], vexRT[Ch3]};
+			ds_aJoystick[0] = vexRT[Ch4];
+			ds_aJoystick[1] = vexRT[Ch3];
 			break;
 
 		case RIGHT_JOYSTICK:
-			ds_aJoystick = {vexRT[Ch1], vexRT[Ch2]};
+			ds_aJoystick[0] = vexRT[Ch1];
+			ds_aJoystick[1] = vexRT[Ch2];
 			break;
 		case SPLIT_JOYSTICK_R:
-			ds_aJoystick = {vexRT[Ch4], vexRT[Ch2]};
+			ds_aJoystick[0] = vexRT[Ch4];
+			ds_aJoystick[1] = vexRT[Ch2];
 			break;
 		case SPLIT_JOYSTICK_L:
 		default:
-			ds_aJoystick = {vexRT[Ch1], vexRT[Ch3]};
+			ds_aJoystick[0] = vexRT[Ch1];
+			ds_aJoystick[1] = vexRT[Ch3];
 			break;
 	}
 
 	if (abs(ds_aJoystick[0]) > DS_DEADBAND || abs(ds_aJoystick[1]) > DS_DEADBAND)
 	{
+		short nNewJoystickY = (DS_SLOW_TURN_RATIO * ds_aJoystick[0]);
 		setDriveSpeed(
-			roundToLimit(ds_Joystick[1] + ds_Joystick[0], -127, 127),
-			roundToLimit(ds_Joystick[1] - ds_Joystick[0], -127, 127),
-			roundToLimit(ds_Joystick[1] + ds_Joystick[0], -127, 127),
-			roundToLimit(ds_Joystick[1] - ds_Joystick[0], -127, 127)
+			roundToLimit(ds_aJoystick[1] + nNewJoystickY, -127, 127),
+			roundToLimit(ds_aJoystick[1] - nNewJoystickY, -127, 127),
+			roundToLimit(ds_aJoystick[1] + nNewJoystickY, -127, 127),
+			roundToLimit(ds_aJoystick[1] - nNewJoystickY, -127, 127)
 		);
 	}
 	else
@@ -99,6 +126,26 @@ int setDriveSpeed(short nPowerLF, short nPowerRF, short nPowerLB, short nPowerRB
 	motor[rightBackMotor] = roundToLimit(nPowerRB, -127, 127);
 
 	return 1;
+}
+
+bool isSlowTurning()
+{
+	return ds_aTurnStates[0];
+}
+
+void setSlowTurning(bool bValue)
+{
+	ds_aTurnStates[0] = bValue;
+}
+
+bool isSlowTurnButtonPressed()
+{
+	return ds_aTurnStates[1];
+}
+
+void setSlowTurnButtonPressed(bool bValue)
+{
+	ds_aTurnStates[1] = bValue;
 }
 
 #endif
