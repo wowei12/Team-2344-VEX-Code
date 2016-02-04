@@ -6,7 +6,6 @@
 #define DS_JOYSTICK_MODE				SPLIT_JOYSTICK_L
 #define DS_DEADBAND 						5
 
-#define DS_SLOW_TURN_BUTTON 		Btn7R
 #define DS_SLOW_TURN_RATIO			0.5
 
 /****************************************************************/
@@ -43,16 +42,6 @@ task driveSystem()
 {
 	while (true)
 	{
-		if (vexRT[DS_SLOW_TURN_BUTTON] && !isSlowTurnButtonPressed())
-		{
-			setSlowTurning(!isSlowTurning());
-			setSlowTurnButtonPressed(true);
-		}
-		else if (!vexRT[DS_SLOW_TURN_BUTTON])
-		{
-			setSlowTurnButtonPressed(false);
-		}
-
 		runDriveSystem();
 	}
 }

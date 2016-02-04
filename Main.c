@@ -24,6 +24,7 @@
 #include "Shooter.h"
 #include "Lift.h"
 #include "Debug.h"
+#include "Control.h"
 
 /************************************************/
 
@@ -33,6 +34,7 @@ task main()
 	startTask(shooter, kDefaultTaskPriority);
 	startTask(lift, kDefaultTaskPriority);
 	startTask(debug, kDefaultTaskPriority);
+	startTask(control, kDefaultTaskPriority);
 
 	// BAD HACK. FIX ASAP.
 	while (true) {}
