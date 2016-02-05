@@ -7,6 +7,12 @@
 #define DS_DEADBAND 						5
 
 #define DS_SLOW_TURN_RATIO			0.5
+#define DS_MAX_SPEED						1000
+
+#define DS_EPSILON							30
+#define DS_PROPORTION_CONST			0.01
+#define DS_INTEGRAL_CONST				0.0
+#define DS_DERIVATIVE_CONST			0.0
 
 /****************************************************************/
 
@@ -18,18 +24,35 @@ typedef enum DS_JOYSTICK_MODES
 	SPLIT_JOYSTICK_R
 };
 
+// 0 = x
+// 1 = y
 byte ds_aJoystick[] = {0, 0};
 
 // Index 0: Turn state.
 // Index 1: Turn button state.
-bool ds_aTurnStates[] = {false, false};
+bool 	ds_aTurnStates[] = {false, false};
+
+// 0 = left side
+// 1 = right side
+float ds_aRequestedSpeed[] = {0, 0};
+float ds_aCurrentSpeed[] = {0, 0};
+byte 	ds_aMotorPower[] = {0, 0};
+
+
+// 0 = newRate
+// 1 = integral
+// 2 = preError
+int ds_aPID[][] = {
+	{0, 0, 0},
+	{0, 0, 0}
+};
 
 /****************************************************************/
 
-int runDriveSystem();
+void incDriveSpeed(byte side);
 
-int setDriveSpeed(short nPower);
-int setDriveSpeed(short nPowerLF, short nPowerRF, short nPowerLB, short nPowerRB);
+void setDsMotorSpeed(short nPower);
+void setDsMotorSpeed(short nPowerL, short nPowerR);
 
 bool isSlowTurning();
 void setSlowTurning(bool bValue);
@@ -42,79 +65,85 @@ task driveSystem()
 {
 	while (true)
 	{
-		runDriveSystem();
+		SensorValue[leftDriveEncoder] = 0;
+		SensorValue[rightDriveEncoder] = 0;
+		incDriveSpeed(0);
+		incDriveSpeed(1);
+		wait1Msec(125);
+		ds_aCurrentSpeed[0] = SensorValue[leftDriveEncoder] / 125.0;
+		ds_aCurrentSpeed[1] = SensorValue[rightDriveEncoder] / 125.0;
 	}
 }
 
 /****************************************************************/
 
-/*
-	Read controller inputs from the controller.
+// side = 0 means left
+// side = 1 means right
 
-	@nJoystick: Tells which joystick to use. Refer to enum above.
-*/
-int runDriveSystem()
+void incDriveSpeed(byte side)
 {
-	switch (DS_JOYSTICK_MODE)
-	{
-		case LEFT_JOYSTICK:
-			ds_aJoystick[0] = vexRT[Ch4];
-			ds_aJoystick[1] = vexRT[Ch3];
-			break;
+	int nNewRate = 0;
 
-		case RIGHT_JOYSTICK:
-			ds_aJoystick[0] = vexRT[Ch1];
-			ds_aJoystick[1] = vexRT[Ch2];
-			break;
-		case SPLIT_JOYSTICK_R:
-			ds_aJoystick[0] = vexRT[Ch4];
-			ds_aJoystick[1] = vexRT[Ch2];
-			break;
-		case SPLIT_JOYSTICK_L:
-		default:
-			ds_aJoystick[0] = vexRT[Ch1];
-			ds_aJoystick[1] = vexRT[Ch3];
-			break;
-	}
+	ds_aPID[side][0] = 0;
 
-	if (abs(ds_aJoystick[0]) > DS_DEADBAND || abs(ds_aJoystick[1]) > DS_DEADBAND)
+	if (ds_aRequestedSpeed[side] == 0)
 	{
-		short nNewJoystickY = (DS_SLOW_TURN_RATIO * ds_aJoystick[0]);
-		setDriveSpeed(
-			roundToLimit(ds_aJoystick[1] + nNewJoystickY, -127, 127),
-			roundToLimit(ds_aJoystick[1] - nNewJoystickY, -127, 127),
-			roundToLimit(ds_aJoystick[1] + nNewJoystickY, -127, 127),
-			roundToLimit(ds_aJoystick[1] - nNewJoystickY, -127, 127)
-		);
+		ds_aCurrentSpeed[side] = 0;
 	}
 	else
 	{
-		setDriveSpeed(0);
+		int error = ds_aRequestedSpeed[side] - ds_aCurrentSpeed[side];
+
+		if (abs(error) > DS_EPSILON)
+		{
+			ds_aPID[side][1] += error;
+		}
+
+		int proportionValue = DS_PROPORTION_CONST * error;
+		int integralValue = DS_INTEGRAL_CONST * ds_aPID[side][1];
+		int derivativeValue = DS_DERIVATIVE_CONST * (error - ds_aPID[side][2]);
+
+		nNewRate = proportionValue + integralValue + derivativeValue;
+
+		if (side == 0)
+		{
+			setDsMotorSpeed(ds_aMotorPower[side] + nNewRate, -1);
+		}
+		else if (side == 1)
+		{
+			setDsMotorSpeed(-1, ds_aMotorPower[side] + nNewRate);
+		}
+
+		ds_aPID[side][2] = error;
+	}
+}
+
+void setDsMotorSpeed(short nPower)
+{
+	ds_aMotorPower[0] = roundToLimit(nPower, -127, 127);
+	ds_aMotorPower[1] = roundToLimit(nPower, -127, 127);
+
+	motor[leftFrontMotor] = nPower;
+	motor[rightFrontMotor] = nPower;
+	motor[leftBackMotor] = nPower;
+	motor[rightBackMotor] = nPower;
+}
+
+void setDsMotorSpeed(short nPowerL, short nPowerR)
+{
+	if (nPowerL > -1)
+	{
+		ds_aMotorPower[0] = roundToLimit(nPowerL, -127, 127);
+		motor[leftFrontMotor] = roundToLimit(nPowerL, -127, 127);
+		motor[rightFrontMotor] = roundToLimit(nPowerR, -127, 127);
 	}
 
-	return 1;
-}
-
-int setDriveSpeed(short nPower)
-{
-	byte newPower = roundToLimit(nPower, -127, 127);
-
-	motor[leftFrontMotor] = newPower;
-	motor[rightFrontMotor] = newPower;
-	motor[leftBackMotor] = newPower;
-	motor[rightBackMotor] = newPower;
-
-	return 1;
-}
-
-int setDriveSpeed(short nPowerLF, short nPowerRF, short nPowerLB, short nPowerRB)
-{
-	motor[leftFrontMotor] = roundToLimit(nPowerLF, -127, 127);
-	motor[rightFrontMotor] = roundToLimit(nPowerRF, -127, 127);
-	motor[leftBackMotor] = roundToLimit(nPowerLB, -127, 127);
-	motor[rightBackMotor] = roundToLimit(nPowerRB, -127, 127);
-
-	return 1;
+	if (nPowerR > -1)
+	{
+		ds_aMotorPower[1] = roundToLimit(nPowerR, -127, 127);
+		motor[leftBackMotor] = roundToLimit(nPowerL, -127, 127);
+		motor[rightBackMotor] = roundToLimit(nPowerR, -127, 127);
+	}
 }
 
 bool isSlowTurning()

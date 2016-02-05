@@ -1,11 +1,5 @@
-#pragma config(Sensor, dgtl1,  light0,         sensorLEDtoVCC)
-#pragma config(Sensor, dgtl2,  light1,         sensorLEDtoVCC)
-#pragma config(Sensor, dgtl3,  light2,         sensorLEDtoVCC)
-#pragma config(Sensor, dgtl4,  light3,         sensorLEDtoVCC)
-#pragma config(Sensor, dgtl5,  light4,         sensorLEDtoVCC)
-#pragma config(Sensor, dgtl6,  light5,         sensorLEDtoVCC)
-#pragma config(Sensor, dgtl7,  light6,         sensorLEDtoVCC)
-#pragma config(Sensor, dgtl8,  light7,         sensorLEDtoVCC)
+#pragma config(Sensor, dgtl1,  leftDriveEncoder, sensorQuadEncoder)
+#pragma config(Sensor, dgtl3,  rightDriveEncoder, sensorQuadEncoder)
 #pragma config(Sensor, dgtl11, shooterEncoder, sensorQuadEncoder)
 #pragma config(Motor,  port1,           liftMotor1,    tmotorVex393_HBridge, openLoop)
 #pragma config(Motor,  port2,           rightFrontMotor, tmotorVex393_MC29, openLoop, reversed)
@@ -23,7 +17,7 @@
 #include "DriveSystem.h"
 #include "Shooter.h"
 #include "Lift.h"
-#include "Debug.h"
+//#include "Debug.h"
 #include "Control.h"
 
 /************************************************/
@@ -33,7 +27,7 @@ task main()
 	startTask(driveSystem, kDefaultTaskPriority);
 	startTask(shooter, kDefaultTaskPriority);
 	startTask(lift, kDefaultTaskPriority);
-	startTask(debug, kDefaultTaskPriority);
+	//startTask(debug, kDefaultTaskPriority);
 	startTask(control, kDefaultTaskPriority);
 
 	// BAD HACK. FIX ASAP.

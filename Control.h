@@ -20,6 +20,7 @@
 void iterateShooterControl();
 void iterateShooterIncControl();
 void iterateDriveSlowControl();
+void runDriveSystem();
 
 /****************************************************************/
 
@@ -30,6 +31,7 @@ task control()
 		iterateShooterControl();
 		iterateShooterIncControl();
 		iterateDriveSlowControl();
+		runDriveSystem();
 	}
 }
 
@@ -96,6 +98,43 @@ void iterateDriveSlowControl()
 	else if (!vexRT[DS_SLOW_TURN_BUTTON])
 	{
 		setSlowTurnButtonPressed(false);
+	}
+}
+
+void runDriveSystem()
+{
+	switch (DS_JOYSTICK_MODE)
+	{
+		case LEFT_JOYSTICK:
+			ds_aJoystick[0] = vexRT[Ch4];
+			ds_aJoystick[1] = vexRT[Ch3];
+			break;
+		case RIGHT_JOYSTICK:
+			ds_aJoystick[0] = vexRT[Ch1];
+			ds_aJoystick[1] = vexRT[Ch2];
+			break;
+		case SPLIT_JOYSTICK_R:
+			ds_aJoystick[0] = vexRT[Ch4];
+			ds_aJoystick[1] = vexRT[Ch2];
+			break;
+		case SPLIT_JOYSTICK_L:
+		default:
+			ds_aJoystick[0] = vexRT[Ch1];
+			ds_aJoystick[1] = vexRT[Ch3];
+			break;
+	}
+
+	if (abs(ds_aJoystick[0]) > DS_DEADBAND || abs(ds_aJoystick[1]) > DS_DEADBAND)
+	{
+		short nNewJoystickY = (DS_SLOW_TURN_RATIO * ds_aJoystick[0]);
+
+		ds_aRequestedSpeed[0] = ((ds_aJoystick[1] + nNewJoystickY) / 127.0) * DS_MAX_SPEED;
+		ds_aRequestedSpeed[1] = ((ds_aJoystick[1] - nNewJoystickY) / 127.0) * DS_MAX_SPEED;
+	}
+	else
+	{
+		ds_aRequestedSpeed[0] = 0;
+		ds_aRequestedSpeed[1] = 0;
 	}
 }
 
