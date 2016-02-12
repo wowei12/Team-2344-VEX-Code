@@ -7,9 +7,10 @@
 #define DS_DEADBAND 						5
 
 #define DS_SLOW_TURN_RATIO			0.5
-#define DS_MAX_SPEED						1000
+#define DS_MAX_SPEED						100
 
-#define DS_EPSILON							30
+#define DS_EPSILON							1
+#define DS_INTEGRAL_DUMP				500
 #define DS_PROPORTION_CONST			0.01
 #define DS_INTEGRAL_CONST				0.0
 #define DS_DERIVATIVE_CONST			0.0
@@ -94,6 +95,10 @@ void incDriveSpeed(byte side)
 	{
 		int error = ds_aRequestedSpeed[side] - ds_aCurrentSpeed[side];
 
+		if (abs(ds_aPID[side][1]) >= DS_INTEGRAL_DUMP)
+		{
+			ds_aPID[side][1] = 0;
+		}
 		if (abs(error) > DS_EPSILON)
 		{
 			ds_aPID[side][1] += error;
