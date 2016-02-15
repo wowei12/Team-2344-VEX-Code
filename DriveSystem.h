@@ -7,7 +7,7 @@
 #define DS_DEADBAND 						5
 
 #define DS_SLOW_TURN_RATIO			0.5
-#define DS_MAX_SPEED						100
+#define DS_MAX_SPEED						120
 
 #define DS_EPSILON							1
 #define DS_INTEGRAL_DUMP				500
@@ -37,8 +37,9 @@ bool 	ds_aTurnStates[] = {false, false};
 // 1 = right side
 float ds_aRequestedSpeed[] = {0, 0};
 float ds_aCurrentSpeed[] = {0, 0};
-byte 	ds_aMotorPower[] = {0, 0};
+short 	ds_aMotorPower[] = {0, 0};
 
+int nNewRate;
 
 // 0 = newRate
 // 1 = integral
@@ -68,11 +69,11 @@ task driveSystem()
 	{
 		SensorValue[leftDriveEncoder] = 0;
 		SensorValue[rightDriveEncoder] = 0;
-		incDriveSpeed(0);
-		incDriveSpeed(1);
+		//incDriveSpeed(0);
+		//incDriveSpeed(1);
 		wait1Msec(125);
-		ds_aCurrentSpeed[0] = SensorValue[leftDriveEncoder] / 125.0;
-		ds_aCurrentSpeed[1] = SensorValue[rightDriveEncoder] / 125.0;
+		ds_aCurrentSpeed[0] = SensorValue[leftDriveEncoder]; // 125.0;
+		ds_aCurrentSpeed[1] = SensorValue[rightDriveEncoder]; // 125.0;
 	}
 }
 
@@ -83,13 +84,13 @@ task driveSystem()
 
 void incDriveSpeed(byte side)
 {
-	int nNewRate = 0;
+	nNewRate = 0;
 
 	ds_aPID[side][0] = 0;
 
 	if (ds_aRequestedSpeed[side] == 0)
 	{
-		ds_aCurrentSpeed[side] = 0;
+		setDsMotorSpeed(0);
 	}
 	else
 	{
@@ -112,11 +113,11 @@ void incDriveSpeed(byte side)
 
 		if (side == 0)
 		{
-			setDsMotorSpeed(ds_aMotorPower[side] + nNewRate, -1);
+			setDsMotorSpeed(ds_aMotorPower[side] + nNewRate, -500);
 		}
 		else if (side == 1)
 		{
-			setDsMotorSpeed(-1, ds_aMotorPower[side] + nNewRate);
+			setDsMotorSpeed(-500, ds_aMotorPower[side] + nNewRate);
 		}
 
 		ds_aPID[side][2] = error;
@@ -136,18 +137,18 @@ void setDsMotorSpeed(short nPower)
 
 void setDsMotorSpeed(short nPowerL, short nPowerR)
 {
-	if (nPowerL > -1)
+	if (nPowerL != -500)
 	{
 		ds_aMotorPower[0] = roundToLimit(nPowerL, -127, 127);
-		motor[leftFrontMotor] = roundToLimit(nPowerL, -127, 127);
-		motor[rightFrontMotor] = roundToLimit(nPowerR, -127, 127);
+		motor[leftFrontMotor] = ds_aMotorPower[0];
+		motor[leftBackMotor] = ds_aMotorPower[0];
 	}
 
-	if (nPowerR > -1)
+	if (nPowerR != -500)
 	{
 		ds_aMotorPower[1] = roundToLimit(nPowerR, -127, 127);
-		motor[leftBackMotor] = roundToLimit(nPowerL, -127, 127);
-		motor[rightBackMotor] = roundToLimit(nPowerR, -127, 127);
+		motor[rightFrontMotor] = ds_aMotorPower[1];
+		motor[rightBackMotor] = ds_aMotorPower[1];
 	}
 }
 

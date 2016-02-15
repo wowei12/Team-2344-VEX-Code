@@ -49,21 +49,24 @@ task lift()
 			//setLiftSpeed(LIFT_SPEED);
 		}
 
-		if (vexRT[INTAKE_BUTTON_FORWARD])
-		{
-			setIntakeSpeed(LIFT_SPEED);
-			setIntakeActive(true);
-		}
-		else if (vexRT[INTAKE_BUTTON_BACKWARD])
-		{
-			setIntakeSpeed(-LIFT_SPEED);
-			setIntakeActive(true);
-		}
-		else
-		{
-			setIntakeSpeed(0);
-			setIntakeActive(false);
-		}
+		//setLiftSpeed(127);
+		//setIntakeSpeed(127);
+
+		//if (vexRT[INTAKE_BUTTON_FORWARD])
+		//{
+		//	setIntakeSpeed(LIFT_SPEED);
+		//	setIntakeActive(true);
+		//}
+		//else if (vexRT[INTAKE_BUTTON_BACKWARD])
+		//{
+		//	setIntakeSpeed(-LIFT_SPEED);
+		//	setIntakeActive(true);
+		//}
+		//else
+		//{
+		//	setIntakeSpeed(0);
+		//	setIntakeActive(false);
+		//}
 	}
 }
 

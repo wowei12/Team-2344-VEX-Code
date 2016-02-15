@@ -31,7 +31,11 @@ task control()
 		iterateShooterControl();
 		iterateShooterIncControl();
 		iterateDriveSlowControl();
-		runDriveSystem();
+		//runDriveSystem();
+
+		setDsMotorSpeed(-500, 127);
+		//ds_aRequestedSpeed[0] = 500;
+		//ds_aRequestedSpeed[1] = 500;
 	}
 }
 
