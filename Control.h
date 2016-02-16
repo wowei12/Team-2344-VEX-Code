@@ -31,9 +31,8 @@ task control()
 		iterateShooterControl();
 		iterateShooterIncControl();
 		iterateDriveSlowControl();
-		//runDriveSystem();
+		runDriveSystem();
 
-		setDsMotorSpeed(-500, 127);
 		//ds_aRequestedSpeed[0] = 500;
 		//ds_aRequestedSpeed[1] = 500;
 	}
@@ -132,14 +131,11 @@ void runDriveSystem()
 	{
 		short nNewJoystickY = (DS_SLOW_TURN_RATIO * ds_aJoystick[0]);
 
-		ds_aRequestedSpeed[0] = ((ds_aJoystick[1] + nNewJoystickY) / 127.0) * DS_MAX_SPEED;
-		ds_aRequestedSpeed[1] = ((ds_aJoystick[1] - nNewJoystickY) / 127.0) * DS_MAX_SPEED;
+		setDsMotorSpeed((ds_aJoystick[1] + nNewJoystickY), (ds_aJoystick[1] - nNewJoystickY));
 	}
 	else
 	{
-		ds_aRequestedSpeed[0] = 0;
-		ds_aRequestedSpeed[1] = 0;
+		setDsMotorSpeed(0, 0);
 	}
 }
-
 #endif

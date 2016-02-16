@@ -25,7 +25,7 @@
 
 task main()
 {
-	startTask(driveSystem, kDefaultTaskPriority);
+	//startTask(driveSystem, kDefaultTaskPriority);
 	startTask(shooter, kDefaultTaskPriority);
 	startTask(lift, kDefaultTaskPriority);
 	//startTask(debug, kDefaultTaskPriority);
