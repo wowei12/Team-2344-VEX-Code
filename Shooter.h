@@ -8,196 +8,115 @@
 #define SHOOTER_INTEGRAL_CONST				0.0
 #define SHOOTER_DERIVATIVE_CONST			0.0
 
-#define SHOOTER_LOW_SPEED 						900 //CHECK // 2000
-#define SHOOTER_MID_SPEED 						1100 //CHECK // 2300
-#define SHOOTER_MAX_SPEED 						1400 //CHECK // 2600
-#define SHOOTER_REVERSE_SPEED					-600
+#define SHOOTER_LOW_SPEED 						36 //CHECK // 2000
+#define SHOOTER_MID_SPEED 						44 //CHECK // 2300
+#define SHOOTER_MAX_SPEED 						56 //CHECK // 2600
+#define SHOOTER_REVERSE_SPEED					-24
+
+#define SHOOTER_INC_RATE 							25
+#define SHOOTER_DEC_RATE 							25
+
+#define SHOOTER_TICK_HZ 							125
 
 
 /****************************************************************/
 
-bool bShooterActive = false;
-bool bShooterIncreaseState = false;
-bool bShooterDecreaseState = false;
-
-int nRequestedSpeed	= 0;
-int nCurrentSpeed		= 0;
-byte nMotorPower = 0;
-
-int newRate = 0;
-int	integral = 0;
-int preError = 0;
-
-/****************************************************************/
-
-int		incShooterSpeed();
-
-int		getShooterRequestedSpeed();
-int		setShooterRequestedSpeed(int nSpeed);
-
-int		getShooterSpeed();
-int		setShooterSpeed(int nSpeed);
-
-byte 	getShooterMotorPower();
-int 	setShooterMotorPower(short nPower);
-
-int		getShooterEncoderValue();
-int		setShooterEncoderValue(int nValue);
-
-bool	isShooterActive();
-int		setShooterActive(bool bValue);
-
-bool	isShooterIncreaseActive();
-int		setShooterIncrease(bool bValue);
-
-bool	isShooterDecreaseActive();
-int		setShooterDecrease(bool bValue);
-
-/****************************************************************/
-
-task shooter()
+typedef struct
 {
+	bool active;
+
+	int power;
+
+	bool inc; // increment
+	bool dec; // decrement
+}
+Shooter_t;
+
+/****************************************************************/
+
+Shooter_t		shooter;
+PID_t 			shooterPID;
+
+/****************************************************************/
+
+void	iterateShooterPID();
+void 	shooterMtr(int nPower);
+
+/****************************************************************/
+
+task shooterTask()
+{
+	shooter.active = false;
+	shooter.power = 0;
+	shooter.inc = false;
+	shooter.dec = false;
+
+	shooterPID.displacement = 0;
+	shooterPID.speed = 0.0;
+	shooterPID.requestedSpeed = 0.0;
+	shooterPID.error = 0;
+	shooterPID.newRate = 0;
+	shooterPID.integral = 0;
+	shooterPID.preError = 0;
+
 	while (true)
 	{
-		setShooterEncoderValue(0);
-		incShooterSpeed();
-		wait1Msec(125);
-		setShooterSpeed(getShooterEncoderValue());
+		shooterPID.displacement = 0;
+		shooterPID.speed = 0;
+
+		wait1Msec(SHOOTER_TICK_HZ);
+
+		ioctl(shooterEncoder, IO_DIG_GET, &shooterPID.displacement);
+		shooterPID.speed = shooterPID.displacement / SHOOTER_TICK_HZ;
+
+		iterateShooterPID();
+
+		shooterMtr(shooter.power);
+		shooter.active = (shooter.power != 0) ? true : false;
 	}
 }
 
 /****************************************************************/
 
-int incShooterSpeed()
+void iterateShooterPID()
 {
-	newRate = 0;
+	shooterPID.newRate = 0;
 
-	if (getShooterRequestedSpeed() == 0)
+	if (shooterPID.requestedSpeed == 0)
 	{
-		setShooterMotorPower(0);
+		shooter.power = 0;
 	}
 	else
 	{
-		int nError = getShooterRequestedSpeed() - getShooterSpeed();
+		shooterPID.error = shooterPID.requestedSpeed - shooterPID.speed;
 
-		if (abs(nError) > SHOOTER_EPSILON)
+		if (abs(shooterPID.error) > SHOOTER_EPSILON)
 		{
-			integral += nError;
+			shooterPID.integral += shooterPID.error;
 		}
 
-		int nProportion = SHOOTER_PROPORTION_CONST * nError;
-		int nIntegral = SHOOTER_INTEGRAL_CONST * integral;
-		int nDerivative = SHOOTER_DERIVATIVE_CONST * (nError - preError);
+		int rate_prop = SHOOTER_PROPORTION_CONST * shooterPID.error;
+		int rate_integral = SHOOTER_INTEGRAL_CONST * shooterPID.integral;
+		int rate_der = SHOOTER_DERIVATIVE_CONST * (shooterPID.error - shooterPID.preError);
 
-		newRate = nProportion + nIntegral + nDerivative;
+		shooterPID.newRate = rate_prop + rate_integral + rate_der;
 
-		setShooterMotorPower(getShooterMotorPower() + newRate);
+		shooter.power += shooterPID.newRate;
 
-		preError = nError;
+		shooterPID.preError = shooterPID.error;
 	}
-
-	return 1;
 }
 
 /****************************************************************/
 
-int getShooterRequestedSpeed()
+
+void shooterMtr(int nPower)
 {
-	return nRequestedSpeed;
+	ioctl(shooterMotor1, IO_MTR_SET, &nPower);
+	ioctl(shooterMotor2, IO_MTR_SET, &nPower);
+	ioctl(shooterMotor3, IO_MTR_SET, &nPower);
+	ioctl(shooterMotor4, IO_MTR_SET, &nPower);
 }
-
-int	setShooterRequestedSpeed(int nSpeed)
-{
-	nRequestedSpeed = nSpeed;
-
-	return 1;
-}
-
-
-int getShooterSpeed()
-{
-	return nCurrentSpeed;
-}
-
-int setShooterSpeed(int nSpeed)
-{
-	nCurrentSpeed = nSpeed;
-
-	return 1;
-}
-
-
-byte getShooterMotorPower()
-{
-	return nMotorPower;
-}
-
-int setShooterMotorPower(short nPower)
-{
-	byte newPower = roundToLimit(nPower, -127, 127);
-
-	nMotorPower = newPower;
-
-	motor[shooterMotor1] = newPower;
-	motor[shooterMotor2] = newPower;
-	motor[shooterMotor3] = newPower;
-	motor[shooterMotor4] = newPower;
-
-	return 1;
-}
-
-
-int	getShooterEncoderValue()
-{
-	return SensorValue[shooterEncoder];
-}
-
-int	setShooterEncoderValue(int nValue)
-{
-	SensorValue[shooterEncoder] = nValue;
-
-	return 1;
-}
-
-
-bool isShooterActive()
-{
-	return bShooterActive;
-}
-
-int setShooterActive(bool bValue)
-{
-	bShooterActive = bValue;
-
-	return 1;
-}
-
-
-bool isShooterIncreaseActive()
-{
-	return bShooterIncreaseState;
-}
-
-int setShooterIncrease(bool bValue)
-{
-	bShooterIncreaseState = bValue;
-
-	return 1;
-}
-
-
-bool isShooterDecreaseActive()
-{
-	return bShooterDecreaseState;
-}
-
-int	setShooterDecrease(bool bValue)
-{
-	bShooterDecreaseState = bValue;
-
-	return 1;
-}
-
 
 /****************************************************************/
 

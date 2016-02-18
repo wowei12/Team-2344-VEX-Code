@@ -6,9 +6,9 @@
 #pragma config(Motor,  port2,           rightFrontMotor, tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port3,           leftFrontMotor, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port4,           shooterMotor4, tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port5,           shooterMotor3, tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port6,           shooterMotor1, tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port7,           shooterMotor2, tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port5,           shooterMotor3, tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port6,           shooterMotor1, tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port7,           shooterMotor2, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port8,           leftBackMotor, tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port9,           rightBackMotor, tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port10,          liftMotor2,    tmotorVex393_HBridge, openLoop, reversed)
@@ -25,11 +25,11 @@
 
 task main()
 {
-	//startTask(driveSystem, kDefaultTaskPriority);
-	startTask(shooter, kDefaultTaskPriority);
-	startTask(lift, kDefaultTaskPriority);
+	startTask(driveSystemTask, kDefaultTaskPriority);
+	startTask(shooterTask, kDefaultTaskPriority);
+	startTask(liftTask, kDefaultTaskPriority);
 	//startTask(debug, kDefaultTaskPriority);
-	startTask(control, kDefaultTaskPriority);
+	startTask(controlTask, kDefaultTaskPriority);
 
 	// BAD HACK. FIX ASAP.
 	while (true) {}

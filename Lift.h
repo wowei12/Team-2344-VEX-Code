@@ -3,115 +3,65 @@
 
 /****************************************************************/
 
-#define LIFT_BUTTON_FORWARD 		Btn6U
-#define LIFT_BUTTON_BACKWARD		Btn6D
-#define INTAKE_BUTTON_FORWARD		Btn5U
-#define INTAKE_BUTTON_BACKWARD	Btn5D
-
 #define LIFT_SPEED	127
+#define INTAKE_SPEED 127
 
 /****************************************************************/
 
-bool bLiftActive = false;
-bool bIntakeActive = false;
-
-/****************************************************************/
-
-int setLiftSpeed(short nPower);
-int setIntakeSpeed(short nPower);
-
-bool isLiftActive();
-int setLiftActive(bool bValue);
-
-bool isIntakeActive();
-int setIntakeActive(bool bValue);
-
-/****************************************************************/
-
-task lift()
+typedef struct
 {
+	bool active;
+	int power;
+}
+Lift_t;
+
+typedef struct
+{
+	bool active;
+	int power;
+}
+Intake_t;
+
+/****************************************************************/
+
+Lift_t lift;
+Intake_t intake;
+
+/****************************************************************/
+
+void liftMtr(int power);
+void intakeMtr(int power);
+
+/****************************************************************/
+
+task liftTask()
+{
+	lift.active = false;
+	lift.power = 0;
+
+	intake.active = false;
+	intake.power = 0;
+
 	while (true)
 	{
-		if (vexRT[LIFT_BUTTON_FORWARD])
-		{
-			setLiftSpeed(LIFT_SPEED);
-			setLiftActive(true);
-		}
-		else if (vexRT[LIFT_BUTTON_BACKWARD])
-		{
-			setLiftSpeed(-LIFT_SPEED);
-			setLiftActive(true);
-		}
-		else
-		{
-			setLiftActive(false);
-			setLiftSpeed(0);
-			//setLiftSpeed(LIFT_SPEED);
-		}
+		liftMtr(lift.power);
+		intakeMtr(intake.power);
 
-		//setLiftSpeed(127);
-		//setIntakeSpeed(127);
-
-		//if (vexRT[INTAKE_BUTTON_FORWARD])
-		//{
-		//	setIntakeSpeed(LIFT_SPEED);
-		//	setIntakeActive(true);
-		//}
-		//else if (vexRT[INTAKE_BUTTON_BACKWARD])
-		//{
-		//	setIntakeSpeed(-LIFT_SPEED);
-		//	setIntakeActive(true);
-		//}
-		//else
-		//{
-		//	setIntakeSpeed(0);
-		//	setIntakeActive(false);
-		//}
+		lift.active = (lift.power != 0) ? true : false;
+		intake.active = (intake.power != 0) ? true : false;
 	}
 }
 
 /****************************************************************/
 
-int setLiftSpeed(short nPower)
+void liftMtr(int power)
 {
-	byte newPower = roundToLimit(nPower, -127, 127);
-
-	motor[liftMotor2] = newPower;
-
-	return 1;
+	ioctl(liftMotor2, IO_MTR_SET, &power);
 }
 
-int setIntakeSpeed(short nPower)
+void intakeMtr(int power)
 {
-	byte newPower = roundToLimit(nPower, -127, 127);
-
-	motor[liftMotor1] = newPower;
-
-	return 1;
-}
-
-bool isLiftActive()
-{
-	return bLiftActive;
-}
-
-int setLiftActive(bool bValue)
-{
-	bLiftActive = bValue;
-
-	return 1;
-}
-
-bool isIntakeActive()
-{
-	return bIntakeActive;
-}
-
-int setIntakeActive(bool bValue)
-{
-	bIntakeActive = bValue;
-
-	return 1;
+	ioctl(liftMotor1, IO_MTR_SET, &power);
 }
 
 /****************************************************************/

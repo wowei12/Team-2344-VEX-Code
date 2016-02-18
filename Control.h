@@ -10,88 +10,83 @@
 #define SHOOTER_REVERSE_BUTTON				Btn7D
 #define SHOOTER_BUTTON_INCREASE 			Btn5U
 #define SHOOTER_BUTTON_DECREASE 			Btn5D
-#define SHOOTER_INC_RATE 25
-#define SHOOTER_DEC_RATE 25
 
-#define DS_SLOW_TURN_BUTTON 		Btn7R
+#define DS_JOYSTICK_MODE							SPLIT_JOYSTICK_L
+#define DS_SLOW_TURN_BUTTON 					Btn7R
 
-/****************************************************************/
+#define LIFT_BUTTON_FORWARD 					Btn6U
+#define LIFT_BUTTON_BACKWARD					Btn6D
 
-void iterateShooterControl();
-void iterateShooterIncControl();
-void iterateDriveSlowControl();
-void runDriveSystem();
+#define INTAKE_BUTTON_FORWARD					Btn5U
+#define INTAKE_BUTTON_BACKWARD				Btn5D
 
 /****************************************************************/
 
-task control()
+void shooterctl();
+void drivectl();
+void liftctl();
+void intakectl();
+
+/****************************************************************/
+
+task controlTask()
 {
 	while (true)
 	{
-		iterateShooterControl();
-		iterateShooterIncControl();
-		iterateDriveSlowControl();
-		runDriveSystem();
-
-		//ds_aRequestedSpeed[0] = 500;
-		//ds_aRequestedSpeed[1] = 500;
+		shooterctl();
+		drivectl();
+		liftctl();
+		intakectl();
 	}
 }
 
 /****************************************************************/
 
-void iterateShooterControl()
+void shooterctl()
 {
 	if (vexRT[SHOOTER_BUTTON_MAX_SPEED])
 	{
-		setShooterRequestedSpeed(SHOOTER_MAX_SPEED);
-		setShooterActive(true);
+		shooterPID.requestedSpeed = SHOOTER_MAX_SPEED;
 	}
 	else if (vexRT[SHOOTER_BUTTON_MID_SPEED])
 	{
-		setShooterRequestedSpeed(SHOOTER_MID_SPEED);
-		setShooterActive(true);
+		shooterPID.requestedSpeed = SHOOTER_MID_SPEED;
 	}
 	else if (vexRT[SHOOTER_BUTTON_LOW_SPEED])
 	{
-		setShooterRequestedSpeed(SHOOTER_LOW_SPEED);
-		setShooterActive(true);
+		shooterPID.requestedSpeed = SHOOTER_LOW_SPEED;
 	}
-	else if (vexRT[SHOOTER_REVERSE_BUTTON]){
-		setShooterRequestedSpeed(SHOOTER_REVERSE_SPEED);
-		setShooterActive(true);
+	else if (vexRT[SHOOTER_REVERSE_BUTTON])
+	{
+		shooterPID.requestedSpeed = SHOOTER_REVERSE_SPEED;
 	}
 	else if (vexRT[SHOOTER_BUTTON_OFF])
 	{
-		setShooterRequestedSpeed(0);
-		setShooterActive(false);
+		shooterPID.requestedSpeed = 0.0;
 	}
-}
 
-void iterateShooterIncControl()
-{
-	if (vexRT[SHOOTER_BUTTON_INCREASE] && !isShooterIncreaseActive())
+	if (vexRT[SHOOTER_BUTTON_INCREASE] && !shooter.inc)
 	{
-		setShooterRequestedSpeed(getShooterRequestedSpeed() + SHOOTER_INC_RATE);
-		setShooterIncrease(true);
+		shooterPID.requestedSpeed += SHOOTER_INC_RATE;
+		shooter.inc = true;
 	}
 	else if (!vexRT[SHOOTER_BUTTON_INCREASE])
 	{
-		setShooterIncrease(false);
+		shooter.inc = false;
 	}
 
-	if (vexRT[SHOOTER_BUTTON_DECREASE] && !isShooterDecreaseActive())
+	if (vexRT[SHOOTER_BUTTON_DECREASE] && !shooter.dec)
 	{
-		setShooterRequestedSpeed(getShooterRequestedSpeed() - SHOOTER_DEC_RATE);
-		setShooterDecrease(true);
+		shooterPID.requestedSpeed -= SHOOTER_DEC_RATE;
+		shooter.dec = true;
 	}
 	else if (!vexRT[SHOOTER_BUTTON_DECREASE])
 	{
-		setShooterDecrease(false);
+		shooter.dec = false;
 	}
 }
 
-void iterateDriveSlowControl()
+void drivectl()
 {
 	if (vexRT[DS_SLOW_TURN_BUTTON] && !isSlowTurnButtonPressed())
 	{
@@ -102,10 +97,7 @@ void iterateDriveSlowControl()
 	{
 		setSlowTurnButtonPressed(false);
 	}
-}
 
-void runDriveSystem()
-{
 	switch (DS_JOYSTICK_MODE)
 	{
 		case LEFT_JOYSTICK:
@@ -136,6 +128,38 @@ void runDriveSystem()
 	else
 	{
 		setDsMotorSpeed(0, 0);
+	}
+}
+
+void liftctl()
+{
+	if (vexRT[LIFT_BUTTON_FORWARD])
+	{
+		lift.power = LIFT_SPEED;
+	}
+	else if (vexRT[LIFT_BUTTON_BACKWARD])
+	{
+		lift.power = -LIFT_SPEED;
+	}
+	else
+	{
+		lift.power = 0;
+	}
+}
+
+void intakectl()
+{
+	if (vexRT[INTAKE_BUTTON_FORWARD])
+	{
+		intake.power = INTAKE_SPEED;
+	}
+	else if (vexRT[INTAKE_BUTTON_BACKWARD])
+	{
+		intake.power = -INTAKE_SPEED;
+	}
+	else
+	{
+		intake.power = 0;
 	}
 }
 #endif

@@ -3,37 +3,156 @@
 
 /****************************************************************/
 
-#define ANA_MTR_GET 		0x0
-#define ANA_MTR_SET 		0x1
-#define DIG_GET	 		0x2
-#define DIG_SET 		0x3
-#define ANA_GET 		0x4
-#define ANA_SET 		0x5
+#define IO_MTR_GET 		0x0
+#define IO_MTR_SET 		0x1
+#define IO_DIG_GET	 	0x2
+#define IO_DIG_SET 		0x3
+#define IO_ANA_GET 		0x4
+#define IO_ANA_SET 		0x5
+
+#define IOERR_INDEX_OUTSIDE_BOUNDS 0x1
+#define IOERR_INVALID_ARGUMENT 0x2
 
 /****************************************************************/
 
-int ioctl(int pd, int opcode, int *args)
+typedef struct
 {
-	if (opcode == ANA_MTR_GET)
+	int displacement;
+	float speed;
+	float requestedSpeed;
+
+	int error;
+	int newRate;
+	int integral;
+	int preError;
+}
+PID_t;
+
+/****************************************************************/
+
+/****************************************************************/
+
+int ioctl(int pd, int opcode, void *args = NULL)
+{
+	if (opcode == IO_MTR_GET)
 	{
-		motor[pd] = args[0];
+		if (pd >= (int)port1 && pd <= (int)port10)
+		{
+			if (args != NULL)
+			{
+				int *argsCast = (int*)args;
+
+				argsCast[0] = motor[pd];
+			}
+			else
+			{
+				return IOERR_INVALID_ARGUMENT;
+			}
+		}
+		else
+		{
+			return IOERR_INDEX_OUTSIDE_BOUNDS;
+		}
 	}
-	else if (opcode == ANA_MTR_SET)
+	else if (opcode == IO_MTR_SET)
 	{
-		args[0] = motor[pd];
+		if (pd >= (int)port1 && pd <= (int)port10)
+		{
+			if (args != NULL)
+			{
+				int *argsCast = (int*)args;
+				motor[pd] = argsCast[0];
+			}
+			else
+			{
+				return IOERR_INVALID_ARGUMENT;
+			}
+		}
+		else
+		{
+			return IOERR_INDEX_OUTSIDE_BOUNDS;
+		}
 	}
-	else if (opcode == DIG_GET)
+	else if (opcode == IO_DIG_GET)
 	{
-		SensorValue[pd] = args[0]
+		if (pd >= (int)dgtl1 && pd <= (int)dgtl12)
+		{
+			if (args != NULL)
+			{
+				int *argsCast = (int*)args;
+				argsCast[0] = SensorValue[pd];
+			}
+			else
+			{
+				return IOERR_INVALID_ARGUMENT;
+			}
+		}
+		else
+		{
+			return IOERR_INDEX_OUTSIDE_BOUNDS;
+		}
 	}
-	else if (opcode == DIG_SET)
+	else if (opcode == IO_DIG_SET)
 	{
-		args[0] = SensorValue[pd];
+		if (pd >= (int)dgtl1 && pd <= (int)dgtl12)
+		{
+			if (args != NULL)
+			{
+				int *argsCast = (int*)args;
+				SensorValue[pd] = argsCast[0];
+			}
+			else
+			{
+				return IOERR_INVALID_ARGUMENT;
+			}
+		}
+		else
+		{
+			return IOERR_INDEX_OUTSIDE_BOUNDS;
+		}
 	}
-	else if (opcode == ANA_SET)
+
+	else if (opcode == IO_ANA_GET)
 	{
-		args[0] = SensorValue[pd];
+		if (pd >= (int)in1 && pd <= (int)in8)
+		{
+			if (args != NULL)
+			{
+				int *argsCast = (int*)args;
+				argsCast[0] = SensorValue[pd];
+			}
+			else
+			{
+				return IOERR_INVALID_ARGUMENT;
+			}
+		}
+		else
+		{
+			return IOERR_INDEX_OUTSIDE_BOUNDS;
+		}
 	}
+
+	else if (opcode == IO_ANA_SET)
+	{
+		if (pd >= (int)in1 && pd <= (int)in8)
+		{
+			if (args != NULL)
+			{
+				int *argsCast = (int*)args;
+				argsCast[0] = SensorValue[pd];
+			}
+			else
+			{
+				return IOERR_INVALID_ARGUMENT;
+			}
+		}
+		else
+		{
+			return IOERR_INDEX_OUTSIDE_BOUNDS;
+		}
+	}
+
+	return 0x0;
 }
 
 /****************************************************************/

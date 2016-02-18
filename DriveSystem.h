@@ -3,7 +3,6 @@
 
 /****************************************************************/
 
-#define DS_JOYSTICK_MODE				SPLIT_JOYSTICK_L
 #define DS_DEADBAND 						5
 
 #define DS_SLOW_TURN_RATIO			0.5
@@ -25,36 +24,35 @@ typedef enum DS_JOYSTICK_MODES
 	SPLIT_JOYSTICK_R
 };
 
-// 0 = x
-// 1 = y
-byte ds_aJoystick[] = {0, 0};
+typedef struct
+{
+	int x;
+	int y;
+}
+Joystick_t;
 
-// Index 0: Turn state.
-// Index 1: Turn button state.
-bool 	ds_aTurnStates[] = {false, false};
+typedef struct
+{
+	bool active;
+	int leftPower;
+	int rightPower;
 
-// 0 = left side
-// 1 = right side
-float ds_aRequestedSpeed[] = {0, 0};
-float ds_aCurrentSpeed[] = {0, 0};
-short 	ds_aMotorPower[] = {0, 0};
+	bool slowTurning;
+	bool slowTurningPressed;
+}
+DriveSystem_t
 
-int nNewRate;
+/****************************************************************/
 
-// 0 = newRate
-// 1 = integral
-// 2 = preError
-int ds_aPID[][] = {
-	{0, 0, 0},
-	{0, 0, 0}
-};
+Joystick_t driveJoystick;
+DriveSystem_t driveSystem;
 
 /****************************************************************/
 
 void incDriveSpeed(byte side);
 
-void setDsMotorSpeed(short nPower);
-void setDsMotorSpeed(short nPowerL, short nPowerR);
+void driveMtr(int power);
+void driveMtr(int leftPower, int rightPower);
 
 bool isSlowTurning();
 void setSlowTurning(bool bValue);
@@ -63,17 +61,20 @@ void setSlowTurnButtonPressed(bool bValue);
 
 /****************************************************************/
 
-task driveSystem()
+task driveSystemTask()
 {
 	while (true)
 	{
-		SensorValue[leftDriveEncoder] = 0;
-		SensorValue[rightDriveEncoder] = 0;
+		int rstval = 0;
+		ioctl(0x1, IO_DIG_SET, &rstval);
+		ioctl(0x3, IO_DIG_SET, &rstval);
 		//incDriveSpeed(0);
 		//incDriveSpeed(1);
 		wait1Msec(125);
-		ds_aCurrentSpeed[0] = SensorValue[leftDriveEncoder]; // 125.0;
-		ds_aCurrentSpeed[1] = SensorValue[rightDriveEncoder]; // 125.0;
+
+		int sensrvals[] = {0, 0};
+		//ioctl(0x1, IO_DIG_SET, &ds_aCurrentSpeed[0]);
+		//ioctl(0x3, IO_DIG_SET, &ds_aCurrentSpeed[1]);
 	}
 }
 
