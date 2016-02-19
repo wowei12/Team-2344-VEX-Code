@@ -10,14 +10,14 @@ enum DS_JOYSTICK_MODES
 	RIGHT_JOYSTICK,
 	SPLIT_JOYSTICK_L,
 	SPLIT_JOYSTICK_R
-}
+};
 
 /****************************************************************/
 
 typedef struct
 {
-	int *x;
-	int *y;
+	short *x;
+	short *y;
 }
 joystick_t;
 
@@ -32,7 +32,7 @@ typedef struct
 
 	btnState_t slowTurningPressed;
 }
-DriveSystem_t
+DriveSystem_t;
 
 /****************************************************************/
 
@@ -48,8 +48,8 @@ void driveMtr(power_t leftPower, power_t rightPower);
 
 task driveSystemTask()
 {
-	driveJoystick.x = 0;
-	driveJoystick.y = 0;
+	driveJoystick.x = NULL;
+	driveJoystick.y = NULL;
 
 	driveSystem.active = false;
 	driveSystem.leftPower = 0;

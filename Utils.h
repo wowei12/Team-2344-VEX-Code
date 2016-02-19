@@ -16,24 +16,24 @@
 
 /****************************************************************/
 
-typedef int	power_t
+typedef int	power_t;
 
 typedef bool state_t;
 typedef bool btnState_t;
 
-typedef int distance_t;
+typedef int length_t;
 typedef float speed_t;
 
 typedef struct
 {
-	distance_t displacement;
+	length_t displacement;
 	speed_t speed;
 	speed_t requestedSpeed;
 
 	speed_t error;
 	speed_t preError;
 	power_t rate;
-	distance_t integral;
+	length_t integral;
 }
 PID_t;
 
