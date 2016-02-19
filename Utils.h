@@ -10,25 +10,32 @@
 #define IO_ANA_GET 		0x4
 #define IO_ANA_SET 		0x5
 
-#define IOERR_INDEX_OUTSIDE_BOUNDS 0x1
-#define IOERR_INVALID_ARGUMENT 0x2
+#define IOERR_NO_ERROR					0x0
+#define IOERR_INDEX_OUTSIDE_BOUNDS		0x1
+#define IOERR_INVALID_ARGUMENT			0x2
 
 /****************************************************************/
+
+typedef int	power_t
+
+typedef bool state_t;
+typedef bool btnState_t;
+
+typedef int distance_t;
+typedef float speed_t;
 
 typedef struct
 {
-	int displacement;
-	float speed;
-	float requestedSpeed;
+	distance_t displacement;
+	speed_t speed;
+	speed_t requestedSpeed;
 
-	int error;
-	int newRate;
-	int integral;
-	int preError;
+	speed_t error;
+	speed_t preError;
+	power_t rate;
+	distance_t integral;
 }
 PID_t;
-
-/****************************************************************/
 
 /****************************************************************/
 
@@ -40,7 +47,7 @@ int ioctl(int pd, int opcode, void *args = NULL)
 		{
 			if (args != NULL)
 			{
-				int *argsCast = (int*)args;
+				power_t *argsCast = (power_t*)args;
 
 				argsCast[0] = motor[pd];
 			}
@@ -60,7 +67,7 @@ int ioctl(int pd, int opcode, void *args = NULL)
 		{
 			if (args != NULL)
 			{
-				int *argsCast = (int*)args;
+				power_t *argsCast = (power_t*)args;
 				motor[pd] = argsCast[0];
 			}
 			else
@@ -79,7 +86,7 @@ int ioctl(int pd, int opcode, void *args = NULL)
 		{
 			if (args != NULL)
 			{
-				int *argsCast = (int*)args;
+				power_t *argsCast = (power_t*)args;
 				argsCast[0] = SensorValue[pd];
 			}
 			else
@@ -98,7 +105,7 @@ int ioctl(int pd, int opcode, void *args = NULL)
 		{
 			if (args != NULL)
 			{
-				int *argsCast = (int*)args;
+				power_t *argsCast = (power_t*)args;
 				SensorValue[pd] = argsCast[0];
 			}
 			else
@@ -118,7 +125,7 @@ int ioctl(int pd, int opcode, void *args = NULL)
 		{
 			if (args != NULL)
 			{
-				int *argsCast = (int*)args;
+				power_t *argsCast = (power_t*)args;
 				argsCast[0] = SensorValue[pd];
 			}
 			else
@@ -138,7 +145,7 @@ int ioctl(int pd, int opcode, void *args = NULL)
 		{
 			if (args != NULL)
 			{
-				int *argsCast = (int*)args;
+				power_t *argsCast = (power_t*)args;
 				argsCast[0] = SensorValue[pd];
 			}
 			else
@@ -152,7 +159,7 @@ int ioctl(int pd, int opcode, void *args = NULL)
 		}
 	}
 
-	return 0x0;
+	return IOERR_NO_ERROR;
 }
 
 /****************************************************************/

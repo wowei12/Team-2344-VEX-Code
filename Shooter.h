@@ -4,17 +4,17 @@
 /****************************************************************/
 
 #define SHOOTER_EPSILON								30
-#define SHOOTER_PROPORTION_CONST			0.01
-#define SHOOTER_INTEGRAL_CONST				0.0
-#define SHOOTER_DERIVATIVE_CONST			0.0
+#define SHOOTER_PROPORTION_CONST					0.01
+#define SHOOTER_INTEGRAL_CONST						0.0
+#define SHOOTER_DERIVATIVE_CONST					0.0
 
-#define SHOOTER_LOW_SPEED 						36 //CHECK // 2000
-#define SHOOTER_MID_SPEED 						44 //CHECK // 2300
-#define SHOOTER_MAX_SPEED 						56 //CHECK // 2600
-#define SHOOTER_REVERSE_SPEED					-24
+#define SHOOTER_LOW_SPEED 							36.0
+#define SHOOTER_MID_SPEED 							44.0
+#define SHOOTER_MAX_SPEED 							56.0
+#define SHOOTER_REVERSE_SPEED						-24.0
 
-#define SHOOTER_INC_RATE 							25
-#define SHOOTER_DEC_RATE 							25
+#define SHOOTER_INC_RATE 							1.0
+#define SHOOTER_DEC_RATE 							1.0
 
 #define SHOOTER_TICK_HZ 							125
 
@@ -23,12 +23,12 @@
 
 typedef struct
 {
-	bool active;
+	state_t active;
 
-	int power;
+	power_t power;
 
-	bool inc; // increment
-	bool dec; // decrement
+	btnState_t inc; // increment
+	btnState_t dec; // decrement
 }
 Shooter_t;
 
@@ -40,7 +40,7 @@ PID_t 			shooterPID;
 /****************************************************************/
 
 void	iterateShooterPID();
-void 	shooterMtr(int nPower);
+void 	shooterMtr(power_t power);
 
 /****************************************************************/
 
@@ -54,10 +54,10 @@ task shooterTask()
 	shooterPID.displacement = 0;
 	shooterPID.speed = 0.0;
 	shooterPID.requestedSpeed = 0.0;
-	shooterPID.error = 0;
-	shooterPID.newRate = 0;
+	shooterPID.error = 0.0;
+	shooterPID.preError = 0.0;
+	shooterPID.rate = 0;
 	shooterPID.integral = 0;
-	shooterPID.preError = 0;
 
 	while (true)
 	{
@@ -80,7 +80,7 @@ task shooterTask()
 
 void iterateShooterPID()
 {
-	shooterPID.newRate = 0;
+	shooterPID.rate = 0;
 
 	if (shooterPID.requestedSpeed == 0)
 	{
@@ -95,13 +95,13 @@ void iterateShooterPID()
 			shooterPID.integral += shooterPID.error;
 		}
 
-		int rate_prop = SHOOTER_PROPORTION_CONST * shooterPID.error;
-		int rate_integral = SHOOTER_INTEGRAL_CONST * shooterPID.integral;
-		int rate_der = SHOOTER_DERIVATIVE_CONST * (shooterPID.error - shooterPID.preError);
+		power_t rate_prop = SHOOTER_PROPORTION_CONST * shooterPID.error;
+		power_t rate_integral = SHOOTER_INTEGRAL_CONST * shooterPID.integral;
+		power_t rate_der = SHOOTER_DERIVATIVE_CONST * (shooterPID.error - shooterPID.preError);
 
-		shooterPID.newRate = rate_prop + rate_integral + rate_der;
+		shooterPID.rate = rate_prop + rate_integral + rate_der;
 
-		shooter.power += shooterPID.newRate;
+		shooter.power += shooterPID.rate;
 
 		shooterPID.preError = shooterPID.error;
 	}
@@ -110,12 +110,12 @@ void iterateShooterPID()
 /****************************************************************/
 
 
-void shooterMtr(int nPower)
+void shooterMtr(power_t power)
 {
-	ioctl(shooterMotor1, IO_MTR_SET, &nPower);
-	ioctl(shooterMotor2, IO_MTR_SET, &nPower);
-	ioctl(shooterMotor3, IO_MTR_SET, &nPower);
-	ioctl(shooterMotor4, IO_MTR_SET, &nPower);
+	ioctl(shooterMotor1, IO_MTR_SET, &power);
+	ioctl(shooterMotor2, IO_MTR_SET, &power);
+	ioctl(shooterMotor3, IO_MTR_SET, &power);
+	ioctl(shooterMotor4, IO_MTR_SET, &power);
 }
 
 /****************************************************************/

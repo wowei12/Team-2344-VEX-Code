@@ -10,15 +10,15 @@
 
 typedef struct
 {
-	bool active;
-	int power;
+	state_t active;
+	power_t power;
 }
 Lift_t;
 
 typedef struct
 {
-	bool active;
-	int power;
+	state_t active;
+	power_t power;
 }
 Intake_t;
 
@@ -29,8 +29,8 @@ Intake_t intake;
 
 /****************************************************************/
 
-void liftMtr(int power);
-void intakeMtr(int power);
+void liftMtr(power_t power);
+void intakeMtr(power_t power);
 
 /****************************************************************/
 
@@ -54,12 +54,12 @@ task liftTask()
 
 /****************************************************************/
 
-void liftMtr(int power)
+void liftMtr(power_t power)
 {
 	ioctl(liftMotor2, IO_MTR_SET, &power);
 }
 
-void intakeMtr(int power)
+void intakeMtr(power_t power)
 {
 	ioctl(liftMotor1, IO_MTR_SET, &power);
 }

@@ -18,8 +18,9 @@
 #include "DriveSystem.h"
 #include "Shooter.h"
 #include "Lift.h"
-//#include "Debug.h"
 #include "Control.h"
+//#include "Debug.h"
+
 
 /************************************************/
 
@@ -28,8 +29,8 @@ task main()
 	startTask(driveSystemTask, kDefaultTaskPriority);
 	startTask(shooterTask, kDefaultTaskPriority);
 	startTask(liftTask, kDefaultTaskPriority);
-	//startTask(debug, kDefaultTaskPriority);
 	startTask(controlTask, kDefaultTaskPriority);
+	//startTask(debug, kDefaultTaskPriority);
 
 	// BAD HACK. FIX ASAP.
 	while (true) {}
