@@ -24,6 +24,7 @@
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 
 #include "Utils.h"
+#include "Music.h"
 #include "DriveSystem.h"
 #include "Shooter.h"
 #include "Lift.h"
@@ -45,6 +46,8 @@ void pre_auton()
   // Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
 
 	bStopTasksBetweenModes = false;
+
+	startTask(playPacMan, kLowPriority);
 
 	// All activities that occur before the competition starts
 	// Example: clearing encoders, setting servo positions, ...
