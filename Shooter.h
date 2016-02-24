@@ -3,18 +3,18 @@
 
 /****************************************************************/
 
-#define SHOOTER_EPSILON								30
-#define SHOOTER_PROPORTION_CONST					0.01
-#define SHOOTER_INTEGRAL_CONST						0.0
-#define SHOOTER_DERIVATIVE_CONST					0.0
+#define SHOOTER_INTEGRAL_CAP					2000
+#define SHOOTER_PROPORTION_CONST			0.09
+#define SHOOTER_INTEGRAL_CONST				0.0
+#define SHOOTER_DERIVATIVE_CONST			1.0
 
-#define SHOOTER_LOW_SPEED 							36.0
-#define SHOOTER_MID_SPEED 							44.0
-#define SHOOTER_MAX_SPEED 							56.0
-#define SHOOTER_REVERSE_SPEED						-24.0
+#define SHOOTER_LOW_SPEED 						300
+#define SHOOTER_MID_SPEED 						400
+#define SHOOTER_MAX_SPEED 						600
+#define SHOOTER_REVERSE_SPEED					-200
 
-#define SHOOTER_INC_RATE 							1.0
-#define SHOOTER_DEC_RATE 							1.0
+#define SHOOTER_INC_RATE 							25
+#define SHOOTER_DEC_RATE 							25
 
 #define SHOOTER_TICK_HZ 							125
 
@@ -61,13 +61,13 @@ task shooterTask()
 
 	while (true)
 	{
-		shooterPID.displacement = 0;
-		shooterPID.speed = 0;
+		int resetValue = 0;
+		ioctl(shooterEncoder, IO_DIG_SET, &resetValue);
 
 		wait1Msec(SHOOTER_TICK_HZ);
 
 		ioctl(shooterEncoder, IO_DIG_GET, &shooterPID.displacement);
-		shooterPID.speed = shooterPID.displacement / SHOOTER_TICK_HZ;
+		shooterPID.speed = (float)shooterPID.displacement;
 
 		iterateShooterPID();
 
@@ -88,20 +88,32 @@ void iterateShooterPID()
 	}
 	else
 	{
-		shooterPID.error = shooterPID.requestedSpeed - shooterPID.speed;
+		shooterPID.error = (shooterPID.requestedSpeed - shooterPID.speed);
 
-		if (abs(shooterPID.error) > SHOOTER_EPSILON)
-		{
-			shooterPID.integral += shooterPID.error;
-		}
+		shooterPID.integral += shooterPID.error * SHOOTER_TICK_HZ;
+		shooterPID.integral = roundToLimit(round(shooterPID.integral), -SHOOTER_INTEGRAL_CAP, SHOOTER_INTEGRAL_CAP);
 
-		power_t rate_prop = SHOOTER_PROPORTION_CONST * shooterPID.error;
-		power_t rate_integral = SHOOTER_INTEGRAL_CONST * shooterPID.integral;
-		power_t rate_der = SHOOTER_DERIVATIVE_CONST * (shooterPID.error - shooterPID.preError);
+		static float rate_prop = 0.0;
+		static float rate_integral = 0.0;
+		static float rate_der = 0.0;
+
+		rate_prop = (SHOOTER_PROPORTION_CONST * shooterPID.error);
+		rate_integral = (SHOOTER_INTEGRAL_CONST * shooterPID.integral);
+		rate_der = (SHOOTER_DERIVATIVE_CONST * (shooterPID.error - shooterPID.preError));
 
 		shooterPID.rate = rate_prop + rate_integral + rate_der;
 
 		shooter.power += shooterPID.rate;
+
+		if (shooterPID.requestedSpeed/abs(shooterPID.requestedSpeed) == 1)
+		{
+			shooter.power = roundToLimit(shooter.power, 0, 128);
+		}
+		else
+		{
+			shooter.power = roundToLimit(shooter.power, 0, -128);
+		}
+
 
 		shooterPID.preError = shooterPID.error;
 	}

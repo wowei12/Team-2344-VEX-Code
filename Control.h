@@ -11,7 +11,6 @@
 #define SHOOTER_INC_BUTTON 					Btn5U
 #define SHOOTER_DEC_BUTTON 					Btn5D
 
-
 #define DS_SLOWTURN_BUTTON 					Btn7R
 #define DS_SLOWTURN_RATIO						0.5
 #define DS_JOYSTICK_MODE						SPLIT_JOYSTICK_L
@@ -21,7 +20,9 @@
 #define LIFT_BACKWARD_BUTTON				Btn6D
 
 #define INTAKE_FORWARD_BUTTON				Btn5U
-#define INTAKE_BACKWARD_BUTTON				Btn5D
+#define INTAKE_BACKWARD_BUTTON			Btn5D
+
+//#define CTL_TEST
 
 /****************************************************************/
 
@@ -30,37 +31,28 @@ void drivectl();
 void liftctl();
 void intakectl();
 
+void shooterTest();
+void driveTest();
+void liftTest();
+void intakeTest();
+
 /****************************************************************/
 
 task controlTask()
 {
-	switch (DS_JOYSTICK_MODE)
-	{
-	case LEFT_JOYSTICK:
-		driveJoystick.x = &vexRT[Ch4];
-		driveJoystick.y = &vexRT[Ch3];
-		break;
-	case RIGHT_JOYSTICK:
-		driveJoystick.x = &vexRT[Ch1];
-		driveJoystick.y = &vexRT[Ch2];
-		break;
-	case SPLIT_JOYSTICK_R:
-		driveJoystick.x = &vexRT[Ch4];
-		driveJoystick.y = &vexRT[Ch2];
-		break;
-	case SPLIT_JOYSTICK_L:
-	default:
-		driveJoystick.x = &vexRT[Ch1];
-		driveJoystick.y = &vexRT[Ch3];
-		break;
-	}
-
 	while (true)
 	{
+#ifndef CTL_TEST
 		shooterctl();
 		drivectl();
 		liftctl();
 		intakectl();
+#else
+		//driveTest();
+		shooterTest();
+		liftTest();
+		intakeTest();
+#endif
 	}
 }
 
@@ -112,6 +104,27 @@ void shooterctl()
 
 void drivectl()
 {
+	switch (DS_JOYSTICK_MODE)
+	{
+	case LEFT_JOYSTICK:
+		driveJoystick.x = vexRT[Ch4];
+		driveJoystick.y = vexRT[Ch3];
+		break;
+	case RIGHT_JOYSTICK:
+		driveJoystick.x = vexRT[Ch1];
+		driveJoystick.y = vexRT[Ch2];
+		break;
+	case SPLIT_JOYSTICK_R:
+		driveJoystick.x = vexRT[Ch4];
+		driveJoystick.y = vexRT[Ch2];
+		break;
+	case SPLIT_JOYSTICK_L:
+	default:
+		driveJoystick.x = vexRT[Ch1];
+		driveJoystick.y = vexRT[Ch3];
+		break;
+	}
+
 	if (vexRT[DS_SLOWTURN_BUTTON] && !driveSystem.slowTurningPressed)
 	{
 		driveSystem.slowTurning = !driveSystem.slowTurning;
@@ -122,8 +135,8 @@ void drivectl()
 		driveSystem.slowTurningPressed = false;
 	}
 
-	power_t x = *driveJoystick.x;
-	power_t y = *driveJoystick.y;
+	power_t x = driveJoystick.x;
+	power_t y = driveJoystick.y;
 
 	if (abs(x) > DS_JOYSTICK_DEADBAND || abs(y) > DS_JOYSTICK_DEADBAND)
 	{
@@ -146,11 +159,11 @@ void liftctl()
 {
 	if (vexRT[LIFT_FORWARD_BUTTON])
 	{
-		lift.power = LIFT_SPEED;
+		lift.power = LIFT_POWER;
 	}
 	else if (vexRT[LIFT_BACKWARD_BUTTON])
 	{
-		lift.power = -LIFT_SPEED;
+		lift.power = -LIFT_POWER;
 	}
 	else
 	{
@@ -162,15 +175,37 @@ void intakectl()
 {
 	if (vexRT[INTAKE_FORWARD_BUTTON])
 	{
-		intake.power = INTAKE_SPEED;
+		intake.power = INTAKE_POWER;
 	}
 	else if (vexRT[INTAKE_BACKWARD_BUTTON])
 	{
-		intake.power = -INTAKE_SPEED;
+		intake.power = -INTAKE_POWER;
 	}
 	else
 	{
 		intake.power = 0;
 	}
+}
+
+void shooterTest()
+{
+	shooterPID.requestedSpeed = SHOOTER_LOW_SPEED;
+	//shooter.power = 127;
+}
+
+void driveTest()
+{
+	driveSystem.leftPower = 127;
+	driveSystem.rightPower = 127;
+}
+
+void liftTest()
+{
+	lift.power = 127;
+}
+
+void intakeTest()
+{
+	intake.power = 127;
 }
 #endif

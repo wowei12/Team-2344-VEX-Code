@@ -16,8 +16,8 @@ enum DS_JOYSTICK_MODES
 
 typedef struct
 {
-	short *x;
-	short *y;
+	word x;
+	word y;
 }
 joystick_t;
 
@@ -48,8 +48,8 @@ void driveMtr(power_t leftPower, power_t rightPower);
 
 task driveSystemTask()
 {
-	driveJoystick.x = NULL;
-	driveJoystick.y = NULL;
+	driveJoystick.x = vexRT[Ch1];
+	driveJoystick.y = vexRT[Ch3];
 
 	driveSystem.active = false;
 	driveSystem.leftPower = 0;
