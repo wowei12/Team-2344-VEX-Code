@@ -93,13 +93,9 @@ void iterateShooterPID()
 		shooterPID.integral += shooterPID.error * SHOOTER_TICK_HZ;
 		shooterPID.integral = roundToLimit(round(shooterPID.integral), -SHOOTER_INTEGRAL_CAP, SHOOTER_INTEGRAL_CAP);
 
-		static float rate_prop = 0.0;
-		static float rate_integral = 0.0;
-		static float rate_der = 0.0;
-
-		rate_prop = (SHOOTER_PROPORTION_CONST * shooterPID.error);
-		rate_integral = (SHOOTER_INTEGRAL_CONST * shooterPID.integral);
-		rate_der = (SHOOTER_DERIVATIVE_CONST * (shooterPID.error - shooterPID.preError));
+		float rate_prop = (SHOOTER_PROPORTION_CONST * shooterPID.error);
+		float rate_integral = (SHOOTER_INTEGRAL_CONST * shooterPID.integral);
+		float rate_der = (SHOOTER_DERIVATIVE_CONST * (shooterPID.error - shooterPID.preError));
 
 		shooterPID.rate = rate_prop + rate_integral + rate_der;
 
