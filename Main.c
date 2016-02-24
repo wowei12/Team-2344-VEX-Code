@@ -67,7 +67,7 @@ void pre_auton()
 
 task autonomous()
 {
-	shooterPID.requestedSpeed = 50;
+	shooterPID.requestedSpeed = 100;
 }
 
 
