@@ -110,7 +110,6 @@ void iterateShooterPID()
 			shooter.power = roundToLimit(shooter.power, 0, -128);
 		}
 
-
 		shooterPID.preError = shooterPID.error;
 	}
 }

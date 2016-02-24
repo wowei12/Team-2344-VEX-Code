@@ -43,14 +43,8 @@ void pre_auton()
 {
   // Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
   // Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
-  bStopTasksBetweenModes = false;
 
-
-	startTask(driveSystemTask, kDefaultTaskPriority);
-	startTask(shooterTask, kDefaultTaskPriority);
-	startTask(liftTask, kDefaultTaskPriority);
-	startTask(controlTask, kDefaultTaskPriority);
-	//startTask(debug, kDefaultTaskPriority);
+	bStopTasksBetweenModes = false;
 
 	// All activities that occur before the competition starts
 	// Example: clearing encoders, setting servo positions, ...
@@ -67,6 +61,11 @@ void pre_auton()
 
 task autonomous()
 {
+	startTask(driveSystemTask, kDefaultTaskPriority);
+	startTask(shooterTask, kDefaultTaskPriority);
+	startTask(liftTask, kDefaultTaskPriority);
+	//startTask(debug, kDefaultTaskPriority);
+
 	shooterPID.requestedSpeed = 100;
 }
 
@@ -82,6 +81,8 @@ task autonomous()
 
 task usercontrol()
 {
+	startTask(controlTask, kDefaultTaskPriority);
+
 	// BAD HACK. FIX ASAP.
 	while (true) {}
 }
