@@ -4,11 +4,13 @@
 /****************************************************************/
 
 #define SHOOTER_INTEGRAL_CAP					2000
-#define SHOOTER_PROPORTION_CONST			0.09
+#define SHOOTER_PROPORTION_CONST			0.03
 #define SHOOTER_INTEGRAL_CONST				0.0
-#define SHOOTER_DERIVATIVE_CONST			1.0
+#define SHOOTER_DERIVATIVE_CONST			0.475
+#define SHOOTER_CONSISTENCY_RANGE			8
+#define SHOOTER_CONSISTENCY_COUNT			4
 
-#define SHOOTER_LOW_SPEED 						300
+#define SHOOTER_LOW_SPEED 						265
 #define SHOOTER_MID_SPEED 						400
 #define SHOOTER_MAX_SPEED 						600
 #define SHOOTER_REVERSE_SPEED					-200
@@ -24,8 +26,9 @@
 typedef struct
 {
 	state_t active;
-
 	power_t power;
+
+	state_t playedSound;
 
 	btnState_t inc; // increment
 	btnState_t dec; // decrement
@@ -48,6 +51,7 @@ task shooterTask()
 {
 	shooter.active = false;
 	shooter.power = 0;
+	shooter.playedSound = false;
 	shooter.inc = false;
 	shooter.dec = false;
 
@@ -58,6 +62,7 @@ task shooterTask()
 	shooterPID.preError = 0.0;
 	shooterPID.rate = 0;
 	shooterPID.integral = 0;
+	shooterPID.consistency = 0;
 
 	while (true)
 	{
@@ -70,6 +75,14 @@ task shooterTask()
 		shooterPID.speed = (float)shooterPID.displacement;
 
 		iterateShooterPID();
+
+		if (shooterPID.consistency >= SHOOTER_CONSISTENCY_COUNT)
+		{
+			if (shooterPID.requestedSpeed != 0)
+			{
+				playPIDSound();
+			}
+		}
 
 		shooterMtr(shooter.power);
 		shooter.active = (shooter.power != 0) ? true : false;
@@ -90,6 +103,16 @@ void iterateShooterPID()
 	{
 		shooterPID.error = (shooterPID.requestedSpeed - shooterPID.speed);
 
+		if (abs(shooterPID.error) <= SHOOTER_CONSISTENCY_RANGE)
+		{
+			shooterPID.consistency++;
+		}
+		else
+		{
+			shooterPID.consistency = 0;
+			shooter.playedSound = false;
+		}
+
 		shooterPID.integral += shooterPID.error * SHOOTER_TICK_HZ;
 		shooterPID.integral = roundToLimit(round(shooterPID.integral), -SHOOTER_INTEGRAL_CAP, SHOOTER_INTEGRAL_CAP);
 
@@ -100,15 +123,7 @@ void iterateShooterPID()
 		shooterPID.rate = rate_prop + rate_integral + rate_der;
 
 		shooter.power += shooterPID.rate;
-
-		if (shooterPID.requestedSpeed/abs(shooterPID.requestedSpeed) == 1)
-		{
-			shooter.power = roundToLimit(shooter.power, 0, 128);
-		}
-		else
-		{
-			shooter.power = roundToLimit(shooter.power, 0, -128);
-		}
+		shooter.power = roundToLimit(shooter.power, 0, 128);
 
 		shooterPID.preError = shooterPID.error;
 	}

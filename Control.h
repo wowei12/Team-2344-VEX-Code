@@ -7,14 +7,14 @@
 #define SHOOTER_LOW_BUTTON					Btn8D
 #define SHOOTER_MID_BUTTON					Btn8R
 #define SHOOTER_MAX_BUTTON					Btn8U
-#define SHOOTER_REVERSE_BUTTON			Btn7D
+//#define SHOOTER_REVERSE_BUTTON			Btn7D
 //#define SHOOTER_INC_BUTTON 					Btn5U
 //#define SHOOTER_DEC_BUTTON 					Btn5D
 
 #define DS_SLOWTURN_BUTTON 					Btn7R
 #define DS_SLOWTURN_RATIO						0.5
 #define DS_JOYSTICK_MODE						SPLIT_JOYSTICK_L
-#define DS_JOYSTICK_DEADBAND 				5
+#define DS_JOYSTICK_DEADBAND 				10
 
 #define LIFT_FORWARD_BUTTON 				Btn6U
 #define LIFT_BACKWARD_BUTTON				Btn6D
@@ -50,8 +50,8 @@ task controlTask()
 #else
 		//driveTest();
 		shooterTest();
-		liftTest();
-		intakeTest();
+//		liftTest();
+//		intakeTest();
 #endif
 	}
 }

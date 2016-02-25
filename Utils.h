@@ -34,6 +34,8 @@ typedef struct
 	speed_t preError;
 	power_t rate;
 	length_t integral;
+
+	int consistency;
 }
 PID_t;
 

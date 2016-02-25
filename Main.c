@@ -47,7 +47,9 @@ void pre_auton()
 
 	bStopTasksBetweenModes = false;
 
-	startTask(playPacMan, kLowPriority);
+	startTask(driveSystemTask, kDefaultTaskPriority);
+	startTask(shooterTask, kDefaultTaskPriority);
+	startTask(liftTask, kDefaultTaskPriority);
 
 	// All activities that occur before the competition starts
 	// Example: clearing encoders, setting servo positions, ...
@@ -64,12 +66,14 @@ void pre_auton()
 
 task autonomous()
 {
-	startTask(driveSystemTask, kDefaultTaskPriority);
-	startTask(shooterTask, kDefaultTaskPriority);
-	startTask(liftTask, kDefaultTaskPriority);
+	startTask(triggerPacMan, kDefaultTaskPriority);
 	//startTask(debug, kDefaultTaskPriority);
 
-	shooterPID.requestedSpeed = 100;
+	shooterPID.requestedSpeed = SHOOTER_MAX_SPEED;
+	moveForward(132);
+
+	lift.power = 127;
+	intake.power = 127;
 }
 
 
@@ -89,3 +93,12 @@ task usercontrol()
 	// BAD HACK. FIX ASAP.
 	while (true) {}
 }
+
+//task main()
+//{
+//	startTask(driveSystemTask, kDefaultTaskPriority);
+//	startTask(shooterTask, kDefaultTaskPriority);
+//	startTask(liftTask, kDefaultTaskPriority);
+//	startTask(controlTask, kDefaultTaskPriority);
+//	while (true) {}
+//}

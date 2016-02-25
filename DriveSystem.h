@@ -72,6 +72,69 @@ task driveSystemTask()
 	}
 }
 
+void moveForward(float lengthInch)
+{
+	int resetValue = 0;
+
+	ioctl(leftDriveEncoder, IO_DIG_SET, &resetValue);
+	ioctl(rightDriveEncoder, IO_DIG_SET, &resetValue);
+
+	float wheelC = 3.25 * PI;
+
+	if (lengthInch/abs(lengthInch) == 1)
+	{
+		driveSystem.leftPower = 127;
+		driveSystem.rightPower = 127;
+	}
+	else
+	{
+		driveSystem.leftPower = -127;
+		driveSystem.rightPower = -127;
+	}
+
+	int leftEncoder = 0;
+	int rightEncoder = 0;
+
+	while (abs(leftEncoder) <= 360 * (lengthInch/wheelC) || abs(rightEncoder) <= 360 * (lengthInch/wheelC))
+	{
+		ioctl(leftDriveEncoder, IO_DIG_GET, &leftEncoder);
+		ioctl(rightDriveEncoder, IO_DIG_GET, &rightEncoder);
+	}
+
+	driveSystem.leftPower = 0;
+	driveSystem.rightPower = 0;
+}
+
+void turn(int degrees)
+{
+	int resetValue = 0;
+	ioctl(leftDriveEncoder, IO_DIG_SET, &resetValue);
+	ioctl(rightDriveEncoder, IO_DIG_SET, &resetValue);
+
+	if (degrees/abs(degrees) == 1)
+	{
+		driveSystem.leftPower = 127;
+		driveSystem.rightPower = -127;
+	}
+	else
+	{
+		driveSystem.leftPower = -127;
+		driveSystem.rightPower = 127;
+	}
+
+	int leftEncoder = 0;
+	int rightEncoder = 0;
+
+	while (abs(leftEncoder) <= (degrees * 2) || abs(rightEncoder) <= (degrees * 2))
+	{
+		ioctl(leftDriveEncoder, IO_DIG_GET, &leftEncoder);
+		ioctl(rightDriveEncoder, IO_DIG_GET, &rightEncoder);
+	}
+
+	driveSystem.leftPower = 0;
+	driveSystem.rightPower = 0;
+}
+
 /****************************************************************/
 
 void driveMtr(power_t power)
